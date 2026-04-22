@@ -188,6 +188,27 @@ export default function ImportacaoPage() {
           {loadingE ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> {t('carregando')}</> : `${t('importar')} ${t('equipamentos')}`}
         </button>
       </div>
+
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
+        <h3 className="font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+          <Upload size={16} /> Importar Solicitações
+        </h3>
+        <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3">
+          Colunas esperadas: <strong>Número</strong>, <strong>Criado</strong>, <strong>DESCRIÇÃO</strong>, <strong>CHAMADO</strong>, <strong>Atribuído a</strong>, <strong>STATUS</strong>, <strong>Data da definição</strong>, <strong>Data da emissão da nota</strong>, <strong>Data da coleta</strong>, <strong>Previsão de chegada</strong>, <strong>Data de chegada</strong>, <strong>Data da Entrega</strong>, <strong>OBS</strong>
+        </div>
+        <DropZone accept=".xlsx,.xls" label="Selecionar planilha de solicitações"
+          onFile={(f) => { setArquivoSolicitacoes(f); setResultadoS(null); preview(f, setPreviewS) }} />
+        {previewS && (
+          <div className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3">
+            <p className="font-medium mb-1">Preview ({previewS.total} linhas) — Colunas: {previewS.colunas.join(', ')}</p>
+          </div>
+        )}
+        <ResultadoCard resultado={resultadoS} />
+        <button onClick={importarSolicitacoes} disabled={!arquivoSolicitacoes || loadingS}
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+          {loadingS ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> {t('carregando')}</> : 'Importar Solicitações'}
+        </button>
+      </div>
     </div>
   )
 }
