@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Portal Tech Refresh</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', system-ui, -apple-system, sans-serif; min-height: 100vh; display: flex; flex-direction: column; background: white; overflow: hidden; position: relative; }
+.bg-waves { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.bg-waves svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.container { position: relative; z-index: 10; display: flex; flex-direction: column; min-height: 100vh; }
+header { padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+header img { height: 2rem; object-fit: contain; }
+.lang-btn { padding: 0.25rem 0.625rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; background: #2563eb; color: white; border: none; cursor: pointer; }
+.content { flex: 1; display: flex; align-items: center; justify-content: center; padding: 3rem 1.5rem; }
+.login-box { width: 100%; max-width: 24rem; background: white; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid #f1f5f9; padding: 2rem; }
+h2 { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 0.25rem; }
+.subtitle { color: #94a3b8; font-size: 0.875rem; margin-bottom: 1.5rem; }
+.error { display: none; margin-bottom: 1rem; padding: 0.75rem; background: #fef2f2; border: 1px solid #fecaca; border-radius: 0.5rem; color: #b91c1c; font-size: 0.875rem; }
+.error.show { display: block; }
+.form-group { margin-bottom: 1rem; }
+label { display: block; font-size: 0.875rem; font-weight: 500; color: #334155; margin-bottom: 0.375rem; }
+input { width: 100%; padding: 0.625rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; color: #1e293b; background: #f8fafc; }
+input::placeholder { color: #cbd5e1; }
+input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+.password-wrapper { position: relative; }
+.password-wrapper input { padding-right: 2.75rem; }
+.toggle-password { position: absolute; right: 0.875rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer; padding: 0.25rem; }
+.toggle-password:hover { color: #1e293b; }
+.btn { width: 100%; background: #2563eb; color: white; font-weight: 600; padding: 0.625rem; border-radius: 0.5rem; font-size: 0.875rem; border: none; cursor: pointer; margin-top: 0.25rem; }
+.btn:hover { background: #1d4ed8; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.forgot { margin-top: 1rem; text-align: center; }
+.forgot a { color: #2563eb; font-size: 0.875rem; text-decoration: none; }
+.forgot a:hover { text-decoration: underline; }
+footer { position: relative; z-index: 10; text-align: center; padding-bottom: 1rem; }
+footer p { font-size: 0.75rem; color: rgba(255, 255, 255, 0.7); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); }
+</style>
+</head>
+<body>
+
+<div class="bg-waves">
+<svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+<defs>
+<linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+<stop offset="0%" stop-color="#0066CC" stop-opacity="0.9" />
+<stop offset="50%" stop-color="#0099FF" stop-opacity="0.7" />
+<stop offset="100%" stop-color="#00CCFF" stop-opacity="0.5" />
+</linearGradient>
+<linearGradient id="g2" x1="100%" y1="0%" x2="0%" y2="100%">
+<stop offset="0%" stop-color="#003399" stop-opacity="0.8" />
+<stop offset="100%" stop-color="#0066CC" stop-opacity="0.4" />
+</linearGradient>
+<linearGradient id="g3" x1="0%" y1="100%" x2="100%" y2="0%">
+<stop offset="0%" stop-color="#00AAFF" stop-opacity="0.6" />
+<stop offset="100%" stop-color="#0055BB" stop-opacity="0.3" />
+</linearGradient>
+</defs>
+<path fill="url(#g1)">
+<animate attributeName="d" dur="8s" repeatCount="indefinite" values="M1440,0 C1200,100 900,0 600,150 C300,300 100,200 0,300 L0,900 L1440,900 Z;M1440,0 C1100,150 800,50 500,200 C200,350 50,250 0,350 L0,900 L1440,900 Z;M1440,0 C1200,100 900,0 600,150 C300,300 100,200 0,300 L0,900 L1440,900 Z" />
+</path>
+<path fill="url(#g2)" opacity="0.6">
+<animate attributeName="d" dur="10s" repeatCount="indefinite" values="M1440,100 C1100,0 800,200 500,100 C200,0 100,150 0,200 L0,900 L1440,900 Z;M1440,50 C1200,200 900,100 600,250 C300,400 100,300 0,400 L0,900 L1440,900 Z;M1440,100 C1100,0 800,200 500,100 C200,0 100,150 0,200 L0,900 L1440,900 Z" />
+</path>
+<path fill="url(#g3)" opacity="0.4">
+<animate attributeName="d" dur="12s" repeatCount="indefinite" values="M1440,200 C1000,100 700,300 400,200 C100,100 0,250 0,300 L0,900 L1440,900 Z;M1440,150 C1100,300 800,150 500,300 C200,450 50,350 0,450 L0,900 L1440,900 Z;M1440,200 C1000,100 700,300 400,200 C100,100 0,250 0,300 L0,900 L1440,900 Z" />
+</path>
+</svg>
+</div>
+
+<div class="container">
+<header>
+<img src="logo-ntt.png" alt="NTT Data">
+<button class="lang-btn">PT</button>
+</header>
+
+<div class="content">
+<div class="login-box">
+<h2>Bem-vindo</h2>
+<p class="subtitle">Acesse o sistema de gestão de equipamentos</p>
+<div id="error" class="error"></div>
+<form id="loginForm">
+<div class="form-group">
+<label>E-mail</label>
+<input type="email" id="email" required placeholder="seu@email.com">
+</div>
+<div class="form-group">
+<label>Senha</label>
+<div class="password-wrapper">
+<input type="password" id="password" required placeholder="••••••••">
+<button type="button" class="toggle-password" onclick="togglePassword()">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+<circle cx="12" cy="12" r="3"></circle>
+</svg>
+</button>
+</div>
+</div>
+<button type="submit" id="btnLogin" class="btn">Entrar</button>
+</form>
+<div class="forgot">
+<a href="#">Esqueci minha senha</a>
+</div>
+</div>
+</div>
+
+<footer>
+<p>Desenvolvido por NTT Data · v2.0.0 · 2026</p>
+</footer>
+</div>
+
+<script>
+const API_URL = 'http://localhost:3002/api';
+
+function togglePassword() {
+  const input = document.getElementById('password');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function mostrarErro(mensagem) {
+  const errorDiv = document.getElementById('error');
+  errorDiv.textContent = mensagem;
+  errorDiv.classList.add('show');
+}
+
+function esconderErro() {
+  const errorDiv = document.getElementById('error');
+  errorDiv.classList.remove('show');
+}
+
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  esconderErro();
+  
+  const btn = document.getElementById('btnLogin');
+  const email = document.getElementById('email').value;
+  const senha = document.getElementById('password').value;
+  
+  btn.disabled = true;
+  btn.textContent = 'Entrando...';
+  
+  try {
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, senha })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Erro ao fazer login');
+    }
+    
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('usuario', JSON.stringify(data.usuario));
+    
+    window.location.href = '/home';
+    
+  } catch (err) {
+    mostrarErro(err.message);
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+});
+</script>
+</body>
+</html>

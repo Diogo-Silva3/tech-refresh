@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meus apps</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, sans-serif; background: #f8f9fb; display: flex; min-height: 100vh; }
+.sidebar { width: 240px; background: white; border-right: 1px solid #e5e7eb; padding: 24px 0; position: fixed; height: 100vh; }
+.logo-section { padding: 0 20px 24px; }
+.logo { height: 28px; }
+.nav-menu { list-style: none; }
+.nav-item { padding: 0 12px; margin-bottom: 4px; }
+.nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: #6b7280; text-decoration: none; border-radius: 8px; font-size: 14px; }
+.nav-link:hover { background: #f3f4f6; }
+.nav-link.active { background: #eff6ff; color: #2563eb; font-weight: 600; }
+.main-content { margin-left: 240px; flex: 1; }
+.header { background: white; border-bottom: 1px solid #e5e7eb; padding: 16px 32px; display: flex; justify-content: space-between; }
+.header-title { font-size: 24px; font-weight: 600; color: #1f2937; }
+.header-subtitle { font-size: 13px; color: #9ca3af; margin-top: 2px; }
+.user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 13px; }
+.content { padding: 32px; }
+.search-input { width: 100%; max-width: 500px; padding: 10px 16px 10px 40px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; margin-bottom: 32px; }
+.section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+.section-title { font-size: 16px; font-weight: 600; color: #4b5563; }
+.apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+.app-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px 20px; text-align: center; cursor: pointer; text-decoration: none; color: inherit; position: relative; display: flex; flex-direction: column; align-items: center; transition: all 0.2s; }
+.app-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.app-icon { width: 64px; height: 64px; margin-bottom: 16px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+.app-card:nth-child(1) .app-icon { background: linear-gradient(135deg, #5b8def 0%, #0063f7 100%); }
+.app-card:nth-child(2) .app-icon { background: linear-gradient(135deg, #26d0a4 0%, #00b383 100%); }
+.app-name { font-size: 15px; font-weight: 600; color: #1f2937; margin-bottom: 4px; }
+.app-description { font-size: 12px; color: #9ca3af; }
+</style>
+</head>
+<body>
+<script>
+const API_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:3002/api' 
+  : 'https://portal.tech-refresh.cloud/api';
+
+// Verificar autenticação
+const token = localStorage.getItem('token');
+const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+
+if (!token) {
+  window.location.href = '/';
+}
+
+// Verificar se token é válido
+fetch(`${API_URL}/auth/me`, {
+  headers: { 'Authorization': `Bearer ${token}` }
+})
+.then(res => {
+  if (!res.ok) throw new Error('Token inválido');
+  return res.json();
+})
+.then(data => {
+  // Atualizar informações do usuário
+  const nome = data.nome || 'Usuário';
+  const email = data.email || '';
+  const iniciais = nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  
+  document.getElementById('userAvatar').textContent = iniciais;
+  document.getElementById('userName').textContent = nome;
+  document.getElementById('userEmail').textContent = email;
+})
+.catch(() => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('usuario');
+  window.location.href = '/';
+});
+
+// Toggle dropdown do usuário
+document.getElementById('userAvatar').addEventListener('click', function(e) {
+  e.stopPropagation();
+  const dropdown = document.getElementById('userDropdown');
+  dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+});
+
+// Fechar dropdown ao clicar fora
+document.addEventListener('click', function() {
+  document.getElementById('userDropdown').style.display = 'none';
+});
+
+// Função de logout
+function logout() {
+  fetch(`${API_URL}/auth/logout`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  .finally(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    window.location.href = '/';
+  });
+}
+
+// Registrar acesso ao sistema
+function acessarSistema(nome, url) {
+  fetch(`${API_URL}/acesso/${nome}`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  .catch(err => console.error('Erro ao registrar acesso:', err));
+  
+  window.open(url, '_blank');
+}
+</script>
+<aside class="sidebar">
+<div class="logo-section"><img src="logo-ntt.png" alt="NTT" class="logo"></div>
+<ul class="nav-menu">
+<li class="nav-item"><a href="#" class="nav-link">📊 Dashboard</a></li>
+<li class="nav-item"><a href="#" class="nav-link active">📱 Meus apps</a></li>
+<li class="nav-item"><a href="#" class="nav-link">🕐 Últimos acessos</a></li>
+<li class="nav-item"><a href="#" class="nav-link">🔔 Notificações</a></li>
+</ul>
+</aside>
+<div class="main-content">
+<header class="header">
+<div>
+<h1 class="header-title">Meus apps</h1>
+<p class="header-subtitle">Acesse seus sistemas internos</p>
+</div>
+<div class="user-menu" style="position: relative;">
+<div class="user-avatar" id="userAvatar" style="cursor: pointer;">U</div>
+<div id="userDropdown" style="display: none; position: absolute; right: 0; top: 40px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-width: 200px; z-index: 100;">
+<div style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb;">
+<div id="userName" style="font-weight: 600; font-size: 14px; color: #1f2937;"></div>
+<div id="userEmail" style="font-size: 12px; color: #9ca3af; margin-top: 2px;"></div>
+</div>
+<button onclick="logout()" style="width: 100%; text-align: left; padding: 10px 16px; font-size: 14px; color: #ef4444; background: none; border: none; cursor: pointer; border-radius: 0 0 8px 8px;">
+Sair
+</button>
+</div>
+</div>
+</header>
+<main class="content">
+<input type="text" class="search-input" placeholder="Procurar apps">
+<section>
+<div class="section-header">
+<span>💼</span>
+<h2 class="section-title">Work</h2>
+</div>
+<div class="apps-grid">
+<a href="#" onclick="event.preventDefault(); acessarSistema('tech-refresh', 'https://tech-refresh.cloud/');" class="app-card">
+<div class="app-icon">📋</div>
+<div class="app-name">Solicitações</div>
+<div class="app-description">Tech Refresh</div>
+</a>
+<a href="#" onclick="event.preventDefault(); acessarSistema('assets', 'https://asset.tech-refresh.cloud/');" class="app-card">
+<div class="app-icon">💼</div>
+<div class="app-name">Assets</div>
+<div class="app-description">Tech Refresh</div>
+</a>
+</div>
+</section>
+</main>
+</div>
+</body>
+</html>

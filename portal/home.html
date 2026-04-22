@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meus apps - Portal Tech Refresh</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, sans-serif; background: #f8f9fb; display: flex; min-height: 100vh; }
+.sidebar { width: 260px; background: #ffffff; border-right: 1px solid #e5e7eb; padding: 24px 0; position: fixed; height: 100vh; box-shadow: 2px 0 8px rgba(0,0,0,0.02); }
+.logo-section { padding: 0 24px 28px; border-bottom: 1px solid #f3f4f6; margin-bottom: 20px; }
+.logo { height: 32px; }
+.nav-menu { list-style: none; padding: 0 12px; }
+.nav-item { margin-bottom: 6px; }
+.nav-link { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #6b7280; text-decoration: none; border-radius: 10px; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+.nav-link:hover { background: #f9fafb; color: #374151; }
+.nav-link.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+.main-content { margin-left: 260px; flex: 1; }
+.header { background: white; border-bottom: 1px solid #e5e7eb; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+.header-title { font-size: 24px; font-weight: 600; color: #1f2937; }
+.header-subtitle { font-size: 13px; color: #9ca3af; margin-top: 2px; }
+.user-menu { position: relative; }
+.user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 13px; cursor: pointer; }
+.user-dropdown { display: none; position: absolute; right: 0; top: 40px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-width: 200px; z-index: 100; }
+.user-dropdown.show { display: block; }
+.user-info { padding: 12px 16px; border-bottom: 1px solid #e5e7eb; }
+.user-name { font-weight: 600; font-size: 14px; color: #1f2937; }
+.user-email { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+.logout-btn { width: 100%; text-align: left; padding: 10px 16px; font-size: 14px; color: #ef4444; background: none; border: none; cursor: pointer; border-radius: 0 0 8px 8px; }
+.logout-btn:hover { background: #fef2f2; }
+.content { padding: 32px; }
+.section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; }
+.section-title { font-size: 18px; font-weight: 600; color: #1f2937; }
+.apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; max-width: 1200px; }
+.app-card { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 28px 24px; text-align: center; cursor: pointer; text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.app-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.12); transform: translateY(-4px); border-color: #d1d5db; }
+.app-icon { width: 72px; height: 72px; margin-bottom: 20px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 36px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.app-card:nth-child(1) .app-icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.app-card:nth-child(2) .app-icon { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.app-name { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 6px; }
+.app-description { font-size: 13px; color: #6b7280; }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+<div class="logo-section"><img src="logo-ntt.png" alt="NTT" class="logo"></div>
+<ul class="nav-menu">
+<li class="nav-item"><a href="#" class="nav-link">📊 Dashboard</a></li>
+<li class="nav-item"><a href="#" class="nav-link active">📱 Meus apps</a></li>
+<li class="nav-item"><a href="#" class="nav-link">🕐 Últimos acessos</a></li>
+<li class="nav-item"><a href="#" class="nav-link">🔔 Notificações</a></li>
+</ul>
+</aside>
+
+<div class="main-content">
+<header class="header">
+<div>
+<h1 class="header-title">Meus apps</h1>
+<p class="header-subtitle">Acesse seus sistemas internos</p>
+</div>
+<div class="user-menu">
+<div class="user-avatar" id="userAvatar">U</div>
+<div class="user-dropdown" id="userDropdown">
+<div class="user-info">
+<div class="user-name" id="userName">Usuário</div>
+<div class="user-email" id="userEmail">email@exemplo.com</div>
+</div>
+<button class="logout-btn" onclick="logout()">Sair</button>
+</div>
+</div>
+</header>
+
+<main class="content">
+<section>
+<div class="section-header">
+<span>💼</span>
+<h2 class="section-title">Sistemas Disponíveis</h2>
+</div>
+<div class="apps-grid">
+<a href="https://tech-refresh.cloud/" target="_blank" class="app-card" onclick="registrarAcesso('tech-refresh')">
+<div class="app-icon">📋</div>
+<div class="app-name">Solicitações</div>
+<div class="app-description">Tech Refresh</div>
+</a>
+<a href="https://asset.tech-refresh.cloud/" target="_blank" class="app-card" onclick="registrarAcesso('assets')">
+<div class="app-icon">💼</div>
+<div class="app-name">Assets</div>
+<div class="app-description">Tech Refresh</div>
+</a>
+</div>
+</section>
+</main>
+</div>
+
+<script>
+const API_URL = 'http://localhost:3002/api';
+
+// Carregar dados do usuário
+const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+if (usuario.nome) {
+  const iniciais = usuario.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  document.getElementById('userAvatar').textContent = iniciais;
+  document.getElementById('userName').textContent = usuario.nome;
+  document.getElementById('userEmail').textContent = usuario.email || '';
+}
+
+// Toggle dropdown
+document.getElementById('userAvatar').addEventListener('click', function(e) {
+  e.stopPropagation();
+  document.getElementById('userDropdown').classList.toggle('show');
+});
+
+// Fechar dropdown ao clicar fora
+document.addEventListener('click', function() {
+  document.getElementById('userDropdown').classList.remove('show');
+});
+
+// Logout
+function logout() {
+  const token = localStorage.getItem('token');
+  if (token) {
+    fetch(API_URL + '/auth/logout', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token }
+    }).catch(err => console.error(err));
+  }
+  localStorage.removeItem('token');
+  localStorage.removeItem('usuario');
+  window.location.href = '/login-final.html';
+}
+
+// Registrar acesso
+function registrarAcesso(sistema) {
+  const token = localStorage.getItem('token');
+  if (token) {
+    fetch(API_URL + '/acesso/' + sistema, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token }
+    }).catch(err => console.error(err));
+  }
+}
+</script>
+</body>
+</html>

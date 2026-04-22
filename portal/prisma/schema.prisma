@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Usuario {
+  id          Int          @id @default(autoincrement())
+  nome        String
+  email       String?
+  funcao      String?
+  role        String       @default("TECNICO")
+  senha       String?
+  resetToken        String?   @map("reset_token")
+  resetTokenExpira  DateTime? @map("reset_token_expira")
+  ativo       Boolean      @default(true)
+  unidadeId   Int?         @map("unidade_id")
+  empresaId   Int          @map("empresa_id")
+  projetoId   Int?         @map("projeto_id")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@map("usuarios")
+}
+
+model Empresa {
+  id        Int      @id @default(autoincrement())
+  nome      String   @unique
+  cnpj      String?
+  logo      String?
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("empresas")
+}
+
+model Unidade {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  cidade    String?
+  estado    String?
+  empresaId Int      @map("empresa_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([nome, empresaId])
+  @@map("unidades")
+}
+
+model LogAcesso {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int?     @map("usuario_id")
+  empresaId  Int?     @map("empresa_id")
+  projetoId  Int?     @map("projeto_id")
+  acao       String
+  detalhes   String?
+  ip         String?
+  userAgent  String?  @map("user_agent")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([empresaId])
+  @@index([usuarioId])
+  @@index([projetoId])
+  @@map("log_acessos")
+}
