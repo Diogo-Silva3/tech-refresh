@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { Plus, Search, LayoutList, Kanban, ClipboardList } from 'lucide-react'
 import api from '../services/api'
 import { useToast } from '../contexts/ToastContext'
+import { useAuth } from '../contexts/AuthContext'
 import { SkeletonRow, EmptyState } from '../components/Skeleton'
 import SolicitacaoModal from '../components/modals/SolicitacaoModal'
 import SolicitacaoPipelineView from '../components/SolicitacaoPipelineView'
@@ -98,6 +99,7 @@ function SummaryCards({ dashboard, loading, onFiltro }) {
 
 export default function SolicitacoesPage() {
   const toast = useToast()
+  const { isTecnico, isAdmin } = useAuth()
   const limit = 20
 
   const [solicitacoes, setSolicitacoes] = useState([])
@@ -185,7 +187,8 @@ export default function SolicitacoesPage() {
           </div>
           <button
             onClick={() => { setEditando(null); setModalOpen(true) }}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            disabled={isTecnico}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           >
             <Plus size={15} /> Nova Solicitação
           </button>

@@ -235,7 +235,7 @@ export default function Sidebar({ open, onClose }) {
             {t('sairDaConta')}
           </button>
           <p className="text-center text-[9px] text-slate-700 mt-2 leading-tight">
-            {t('desenvolvido')} <span className="text-slate-500">NTT Data</span> · v2.0.0 · 2026
+            {t('desenvolvido')} <span className="text-slate-500">NTT Data</span> · v2.1 · 2026
           </p>
         </div>
       </aside>

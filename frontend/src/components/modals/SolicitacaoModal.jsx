@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import api from '../../services/api'
 import { useToast } from '../../contexts/ToastContext'
+import { useAuth } from '../../contexts/AuthContext'
 
 // ── Estado derivado (mesma lógica do backend) ────────────────────────────────
 
@@ -57,7 +58,18 @@ const EMPTY_FORM = {
 
 export default function SolicitacaoModal({ solicitacao, onClose, onSave }) {
   const toast = useToast()
+  const { isTecnico, isAdmin } = useAuth()
   const isEdit = !!solicitacao
+
+  // Campos que apenas TÉCNICO pode editar
+  const camposTecnico = ['dataDefinicao', 'dataChegada', 'dataEntrega']
+  
+  // Determinar se um campo é editável
+  const ehEditavel = (campo) => {
+    if (isAdmin) return true // ADMIN/SUPERADMIN pode editar tudo
+    if (isTecnico) return camposTecnico.includes(campo) // TÉCNICO só esses 3
+    return false
+  }
 
   const [form, setForm] = useState(() => {
     if (!solicitacao) return { ...EMPTY_FORM }
@@ -152,12 +164,16 @@ export default function SolicitacaoModal({ solicitacao, onClose, onSave }) {
 
   const estadoAtual = derivarEstado(form)
 
-  const inputCls = (campo) =>
-    `w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 bg-white dark:bg-white/5 text-slate-800 dark:text-white transition-colors ${
+  const inputCls = (campo) => {
+    const isReadonly = !ehEditavel(campo)
+    return `w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 bg-white dark:bg-white/5 text-slate-800 dark:text-white transition-colors ${
+      isReadonly ? 'bg-slate-50 dark:bg-white/3 cursor-not-allowed opacity-60' : ''
+    } ${
       erros[campo]
         ? 'border-red-400 focus:ring-red-500/30'
         : 'border-slate-200 dark:border-white/10 focus:ring-blue-500/30'
     }`
+  }
   const labelCls = 'block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1'
 
   return (
@@ -189,6 +205,7 @@ export default function SolicitacaoModal({ solicitacao, onClose, onSave }) {
                   type="text"
                   value={form.numeroChamado}
                   onChange={set('numeroChamado')}
+                  readOnly={!ehEditavel('numeroChamado')}
                   placeholder="INC1234567 ou TASK1234567"
                   className={inputCls('numeroChamado')}
                 />
@@ -196,7 +213,7 @@ export default function SolicitacaoModal({ solicitacao, onClose, onSave }) {
               </div>
               <div>
                 <label className={labelCls}>Tipo *</label>
-                <select value={form.tipo} onChange={set('tipo')} className={inputCls('tipo')}>
+                <select value={form.tipo} onChange={set('tipo')} disabled={!ehEditavel('tipo')} className={inputCls('tipo')}>
                   <option value="">Selecionar...</option>
                   <option value="TROCA">TROCA</option>
                   <option value="NOVO">NOVO</option>
@@ -207,7 +224,7 @@ export default function SolicitacaoModal({ solicitacao, onClose, onSave }) {
               </div>
               <div>
                 <label className={labelCls}>Status</label>
-                <select value={form.status} onChange={set('status')} className={inputCls('status')}>
+                <select value={form.status} onChange={set('status')} disabled={!ehEditavel('status')} className={inputCls('status')}>
                   <option value="ABERTO">Aberto</option>
                   <option value="EM_ANDAMENTO">Em andamento</option>
                   <option value="ENCERRADO">Encerrado</option>
@@ -215,7 +232,7 @@ export default function SolicitacaoModal({ solicitacao, onClose, onSave }) {
               </div>
               <div>
                 <label className={labelCls}>Técnico *</label>
-                <select value={form.tecnicoId} onChange={set('tecnicoId')} className={inputCls('tecnicoId')}>
+                <select value={form.tecnicoId} onChange={set('tecnicoId')} disabled={!ehEditavel('tecnicoId')} className={inputCls('tecnicoId')}>
                   <option value="">Selecionar...</option>
                   {tecnicos.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
                 </select>
@@ -223,7 +240,7 @@ export default function SolicitacaoModal({ solicitacao, onClose, onSave }) {
               </div>
               <div>
                 <label className={labelCls}>Unidade *</label>
-                <select value={form.unidadeId} onChange={set('unidadeId')} className={inputCls('unidadeId')}>
+                <select value={form.unidadeId} onChange={set('unidadeId')} disabled={!ehEditavel('unidadeId')} className={inputCls('unidadeId')}>
                   <option value="">Selecionar...</option>
                   {unidades.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
                 </select>
@@ -238,7 +255,7 @@ export default function SolicitacaoModal({ solicitacao, onClose, onSave }) {
             <div className="space-y-3">
               <div>
                 <label className={labelCls}>Descrição</label>
-                <input type="text" value={form.descricao} onChange={set('descricao')} className={inputCls('descricao')} />
+                <input type="text" value={form.descricao} onChange={set('descricao')} readOnly={!ehEditavel('descricao')} className={inputCls('descricao')} />
               </div>
               <div>
                 <label className={labelCls}>
@@ -249,6 +266,7 @@ export default function SolicitacaoModal({ solicitacao, onClose, onSave }) {
                   value={form.observacoes}
                   onChange={set('observacoes')}
                   maxLength={2000}
+                  readOnly={!ehEditavel('observacoes')}
                   rows={3}
                   className={inputCls('observacoes') + ' resize-none'}
                 />
@@ -256,12 +274,12 @@ export default function SolicitacaoModal({ solicitacao, onClose, onSave }) {
               {form.tipo === 'TROCA' && (
                 <div>
                   <label className={labelCls}>Serial de Origem (equipamento defeituoso)</label>
-                  <input type="text" value={form.serialOrigem} onChange={set('serialOrigem')} className={inputCls('serialOrigem') + ' font-mono'} />
+                  <input type="text" value={form.serialOrigem} onChange={set('serialOrigem')} readOnly={!ehEditavel('serialOrigem')} className={inputCls('serialOrigem') + ' font-mono'} />
                 </div>
               )}
               <div>
                 <label className={labelCls}>Equipamento (opcional)</label>
-                <select value={form.equipamentoId} onChange={set('equipamentoId')} className={inputCls('equipamentoId')}>
+                <select value={form.equipamentoId} onChange={set('equipamentoId')} disabled={!ehEditavel('equipamentoId')} className={inputCls('equipamentoId')}>
                   <option value="">Nenhum</option>
                   {equipamentos.map(eq => (
                     <option key={eq.id} value={eq.id}>{eq.marca} {eq.modelo} — {eq.serialNumber}</option>
@@ -288,7 +306,13 @@ export default function SolicitacaoModal({ solicitacao, onClose, onSave }) {
               ].map(({ field, label }) => (
                 <div key={field}>
                   <label className={labelCls}>{label}</label>
-                  <input type="date" value={form[field]} onChange={set(field)} className={inputCls(field)} />
+                  <input 
+                    type="date" 
+                    value={form[field]} 
+                    onChange={set(field)} 
+                    readOnly={!ehEditavel(field)}
+                    className={inputCls(field)} 
+                  />
                 </div>
               ))}
             </div>

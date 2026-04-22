@@ -186,7 +186,7 @@ export default function LoginPage() {
 
       {/* Footer */}
       <footer className="relative z-10 text-center pb-4">
-        <p className="text-xs text-white/70 drop-shadow">Desenvolvido por NTT Data · v2.0.0 · 2026</p>
+        <p className="text-xs text-white/70 drop-shadow">Desenvolvido por NTT Data · v2.1 · 2026</p>
       </footer>
     </div>
   )

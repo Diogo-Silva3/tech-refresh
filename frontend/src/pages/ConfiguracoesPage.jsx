@@ -173,7 +173,7 @@ export default function ConfiguracoesPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">Versão</p>
-                <p className="text-[13px] text-slate-700 dark:text-slate-300 font-medium">2.0.0</p>
+                <p className="text-[13px] text-slate-700 dark:text-slate-300 font-medium">2.1</p>
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">Empresa</p>
@@ -309,7 +309,7 @@ export default function ConfiguracoesPage() {
             </div>
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-white/[0.04]">
               {[
-                { label: 'Versão', value: '2.0.0' },
+                { label: 'Versão', value: '2.1' },
                 { label: 'Ambiente', value: 'Produção' },
                 { label: 'Desenvolvido por', value: 'NTT Data' },
                 { label: 'Ano', value: '2026' },
