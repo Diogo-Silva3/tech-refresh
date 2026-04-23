@@ -4,6 +4,7 @@ import { ToastProvider } from './contexts/ToastContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/layout/Layout'
+import AssistenteIA from './components/AssistenteIA'
 import LoginPage from './pages/LoginPage'
 import EsqueciSenhaPage from './pages/EsqueciSenhaPage'
 import RedefinirSenhaPage from './pages/RedefinirSenhaPage'
@@ -46,6 +47,7 @@ export default function App() {
       <ThemeProvider>
         <AuthProvider>
           <ToastProvider>
+            <AssistenteIA />
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
