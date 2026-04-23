@@ -24,16 +24,22 @@ export default function AssistenteIA() {
   }, [mensagens]);
 
   const respostasIA = {
-    'oi': 'Olá! Como posso ajudá-lo com o sistema de Tech Refresh?',
-    'olá': 'Olá! Como posso ajudá-lo com o sistema de Tech Refresh?',
-    'ajuda': 'Posso ajudar com:\n• Informações sobre equipamentos\n• Status de agendamentos\n• Dúvidas sobre como usar o sistema\n• Sugestões de otimização\n\nO que você precisa?',
-    'equipamentos': 'Para gerenciar equipamentos:\n1. Vá para "Equipamentos"\n2. Clique em "Novo Equipamento"\n3. Preencha os dados\n4. Clique em "Salvar"\n\nPrecisa de mais ajuda?',
-    'agendamento': 'Para agendar uma entrega:\n1. Vá para "Solicitações"\n2. Selecione o equipamento\n3. Clique em "Agendar Entrega"\n4. Escolha data e hora\n5. Confirme\n\nAlguma dúvida?',
-    'dashboard': 'O Dashboard mostra:\n• Total de equipamentos\n• Equipamentos agendados\n• Equipamentos entregues\n• Equipamentos disponíveis\n• Ciclo de preparação\n\nQuer saber mais sobre algum número?',
-    'erro': 'Desculpe, encontrei um erro. Por favor:\n1. Recarregue a página\n2. Tente novamente\n3. Se persistir, contate o suporte\n\nPosso ajudar com mais algo?',
-    'técnico': 'Como técnico, você pode:\n• Ver equipamentos atribuídos\n• Registrar preparação\n• Agendar entregas\n• Confirmar entregas\n• Visualizar histórico\n\nO que você precisa fazer?',
-    'admin': 'Como admin, você pode:\n• Gerenciar todos os equipamentos\n• Criar usuários\n• Atribuir projetos\n• Ver relatórios\n• Configurar sistema\n\nO que você precisa?',
-    'default': 'Entendi sua pergunta. Posso ajudar com:\n• Como usar o sistema\n• Informações sobre equipamentos\n• Status de agendamentos\n• Dúvidas gerais\n\nTente perguntar algo específico!'
+    'oi': 'Olá! 👋 Bem-vindo ao Tech Refresh! Como posso ajudá-lo hoje?',
+    'olá': 'Olá! 👋 Bem-vindo ao Tech Refresh! Como posso ajudá-lo hoje?',
+    'opa': 'E aí! 😊 Tudo bem? Como posso ajudar?',
+    'e aí': 'E aí! 😊 Tudo bem? Como posso ajudar?',
+    'ajuda': 'Claro! Posso ajudar com:\n\n📱 Equipamentos\n• Como registrar novo equipamento\n• Buscar equipamentos\n• Ver detalhes\n\n📅 Agendamentos\n• Como agendar entrega\n• Ver agendamentos\n• Confirmar entrega\n\n📊 Dashboard\n• Entender os números\n• Ver ciclo de preparação\n• Relatórios\n\n👥 Usuários\n• Criar usuários\n• Atribuir equipamentos\n• Gerenciar permissões\n\nO que você precisa?',
+    'equipamentos': 'Para gerenciar equipamentos:\n\n✅ Registrar novo:\n1. Clique em "Equipamentos"\n2. Clique em "Novo Equipamento"\n3. Preencha: Marca, Modelo, Serial\n4. Clique em "Salvar"\n\n🔍 Buscar:\n1. Use a barra de busca\n2. Digite marca, modelo ou serial\n\n📋 Ver detalhes:\n1. Clique no equipamento\n2. Veja histórico e status\n\nPrecisa de mais?',
+    'agendamento': 'Para agendar uma entrega:\n\n📅 Passo a passo:\n1. Vá para "Solicitações"\n2. Selecione o equipamento\n3. Clique em "Agendar Entrega"\n4. Escolha:\n   • Data\n   • Hora\n   • Local\n5. Confirme\n\n✅ Pronto! O equipamento está agendado.\n\nQuer saber mais?',
+    'dashboard': '📊 Dashboard - Entenda os números:\n\n🔵 TOTAL DO PROJETO\nTodos os equipamentos do projeto\n\n📦 AGENDADAS\nEquipamentos prontos para entregar\n\n✅ ENTREGAS\nEquipamentos já entregues\n\n📍 DISPONÍVEIS\nEquipamentos prontos para usar\n\n⏳ FALTAM ENTREGAR\nEquipamentos ainda em preparação\n\n🔄 CICLO DE PREPARAÇÃO\nEstágios: Imagem → Softwares → Agendado → Entregue\n\nQuer saber mais sobre algum número?',
+    'preparacao': '🔄 Ciclo de Preparação:\n\n1️⃣ COM IMAGEM\nImagem do SO instalada\n\n2️⃣ SOFTWARES INSTALADOS\nTodos os programas prontos\n\n3️⃣ AG. ENTREGA\nAgendado para entregar\n\n4️⃣ ENTREGUES\nJá foi para o usuário\n\nCada etapa é importante! Qual você quer saber mais?',
+    'técnico': '👨‍💼 Como Técnico, você pode:\n\n✅ Ver equipamentos atribuídos\n✅ Registrar preparação\n✅ Agendar entregas\n✅ Confirmar entregas\n✅ Visualizar histórico\n✅ Editar dados de entrega\n\n❌ Não pode:\n• Criar usuários\n• Deletar equipamentos\n• Alterar projetos\n\nO que você precisa fazer?',
+    'admin': '👨‍💼 Como Admin, você pode:\n\n✅ Gerenciar todos os equipamentos\n✅ Criar e editar usuários\n✅ Atribuir equipamentos\n✅ Ver relatórios\n✅ Importar dados\n✅ Configurar sistema\n✅ Ver auditoria\n\nQual é sua necessidade?',
+    'solicitacao': '📝 Solicitações:\n\nSolicitações são pedidos de equipamentos.\n\n✅ Você pode:\n• Ver todas as solicitações\n• Editar datas de entrega\n• Confirmar recebimento\n• Adicionar observações\n\n📍 Onde encontrar:\nMenu → Solicitações\n\nPrecisa de ajuda?',
+    'erro': '❌ Encontrei um erro!\n\nTente:\n1. Recarregue a página (F5)\n2. Tente novamente\n3. Limpe o cache do navegador\n4. Se persistir, contate o suporte\n\nDesculpe pelo inconveniente!',
+    'senha': '🔐 Esqueceu a senha?\n\n1. Clique em "Esqueci minha senha"\n2. Digite seu email\n3. Verifique seu email\n4. Clique no link\n5. Crie uma nova senha\n\nNão recebeu? Contate o suporte!',
+    'relatorio': '📊 Relatórios:\n\nVocê pode gerar:\n• Equipamentos por status\n• Entregas por período\n• Assinaturas\n• Histórico de movimentações\n\nOnde encontrar:\nMenu → Relatórios\n\nQual relatório você precisa?',
+    'default': '😊 Entendi sua pergunta!\n\nPosso ajudar com:\n• 📱 Equipamentos\n• 📅 Agendamentos\n• 📊 Dashboard\n• 👥 Usuários\n• 📝 Solicitações\n• 📋 Relatórios\n\nTente perguntar algo mais específico! 😊'
   };
 
   const obterResposta = (texto) => {
