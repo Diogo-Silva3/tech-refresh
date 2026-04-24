@@ -7,7 +7,7 @@ export default function AssistenteIA() {
     {
       id: 1,
       tipo: 'ia',
-      texto: 'Olá! Sou seu assistente IA. Como posso ajudá-lo hoje?',
+      texto: '🎯 Olá! Sou seu TUTOR do sistema Tech Refresh!\n\n🚨 MODO ULTRA SEGURO ATIVO\n\nEu apenas ENSINO como usar o sistema.\nNão tenho acesso a dados reais.\nNão executo ações.\n\nComo posso te orientar hoje?',
       timestamp: new Date()
     }
   ]);
@@ -69,18 +69,43 @@ export default function AssistenteIA() {
     setInputMensagem('');
     setCarregando(true);
 
-    // Simular delay de resposta
-    setTimeout(() => {
-      const resposta = obterResposta(inputMensagem);
+    try {
+      // Chamar API da IA
+      const response = await fetch('/api/assistente-ia/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ mensagem: inputMensagem })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao obter resposta da IA');
+      }
+
+      const data = await response.json();
+      
       const novaMensagemIA = {
         id: mensagens.length + 2,
         tipo: 'ia',
-        texto: resposta,
+        texto: data.resposta,
         timestamp: new Date()
       };
+      
       setMensagens(prev => [...prev, novaMensagemIA]);
+    } catch (err) {
+      console.error('Erro:', err);
+      const mensagemErro = {
+        id: mensagens.length + 2,
+        tipo: 'ia',
+        texto: 'Desculpe, encontrei um erro ao processar sua pergunta. Tente novamente!',
+        timestamp: new Date()
+      };
+      setMensagens(prev => [...prev, mensagemErro]);
+    } finally {
       setCarregando(false);
-    }, 500);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -111,8 +136,8 @@ export default function AssistenteIA() {
           {/* Header */}
           <div className="bg-blue-600 text-white p-4 rounded-t-lg flex justify-between items-center">
             <div>
-              <h3 className="font-bold">Assistente IA</h3>
-              <p className="text-xs opacity-90">Sempre aqui para ajudar</p>
+              <h3 className="font-bold">🎯 TUTOR Tech Refresh</h3>
+              <p className="text-xs opacity-90">🚨 Modo Ultra Seguro - Apenas ensino</p>
             </div>
             <button
               onClick={() => setAberto(false)}
