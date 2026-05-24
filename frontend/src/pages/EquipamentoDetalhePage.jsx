@@ -105,6 +105,63 @@ function FluxoPreparacao({ equipamento, colaboradores, tecnicos, onAtualizar, is
   const [agendamento, setAgendamento] = useState(equipamento.agendamento || { colaboradorId: '', data: '', horario: '', local: '' })
   const [salvando, setSalvando] = useState(false)
 
+  // Auto-salvar quando colaborador, data e horário são preenchidos
+  useEffect(() => {
+    // Só salvar se estamos na etapa de agendamento
+    if (etapaAtual.key !== 'Agendado para Entrega') return
+    
+    // Só salvar se tem colaborador, data e horário
+    if (!agendamento.colaboradorId || !agendamento.data || !agendamento.horario) return
+
+    // Aguardar 2 segundos antes de salvar (para não salvar a cada keystroke)
+    const timer = setTimeout(async () => {
+      try {
+        setSalvando(true)
+        console.log('💾 Salvando agendamento e atualizando status...')
+        
+        // 1. Salvar agendamento no equipamento
+        await api.put(`/equipamentos/${equipamento.id}`, {
+          statusProcesso: 'Agendado para Entrega',
+          agendamento: {
+            ...agendamento,
+            colaboradorId: parseInt(agendamento.colaboradorId)
+          }
+        })
+        
+        // 2. Criar Atribuição (Vinculação) com o colaborador
+        try {
+          // Converter data para ISO string com horário
+          let dataAgendamentoISO = null
+          if (agendamento.data && agendamento.horario) {
+            const [hora, minuto] = agendamento.horario.split(':')
+            const dataObj = new Date(agendamento.data + 'T' + agendamento.horario + ':00')
+            dataAgendamentoISO = dataObj.toISOString()
+          }
+          
+          const resAtrib = await api.post('/vinculacoes', {
+            usuarioId: parseInt(agendamento.colaboradorId),
+            equipamentoId: equipamento.id,
+            tecnicoId: equipamento.tecnicoId || null,
+            tipoOperacao: 'Agendamento na Preparação',
+            dataAgendamento: dataAgendamentoISO,
+          })
+          console.log('✅ Atribuição criada com sucesso:', resAtrib.data)
+        } catch (err) {
+          console.error('❌ Erro ao criar atribuição:', err.response?.data || err.message)
+          console.error('Status:', err.response?.status)
+        }
+        
+        console.log('✅ Agendamento salvo com sucesso')
+        setSalvando(false)
+      } catch (err) {
+        console.error('Erro ao salvar:', err)
+        setSalvando(false)
+      }
+    }, 2000)
+
+    return () => clearTimeout(timer)
+  }, [agendamento.colaboradorId, agendamento.data, agendamento.horario, etapaAtual.key, equipamento.id])
+
   // Log de etapas salvo no campo dedicado historicoEtapas
   const logEtapas = (() => {
     try {
@@ -159,6 +216,27 @@ function FluxoPreparacao({ equipamento, colaboradores, tecnicos, onAtualizar, is
     } catch (err) { 
       console.error('Erro ao avançar etapa:', err)
       alert('Erro ao avançar etapa')
+    }
+    setSalvando(false)
+  }
+
+  const voltar = async () => {
+    if (idxAtual <= 0) return
+    const etapaAnterior = etapas[idxAtual - 1]
+    
+    setSalvando(true)
+    try {
+      const res = await api.put(`/equipamentos/${equipamento.id}`, {
+        statusProcesso: etapaAnterior.key,
+        comentarioEtapa: comentario || 'Retornado para etapa anterior',
+        agendamento: null
+      })
+      setComentario('')
+      setAgendamento({ colaboradorId: '', data: '', horario: '', local: '' })
+      onAtualizar(res.data)
+    } catch (err) {
+      console.error('Erro ao voltar etapa:', err)
+      alert('Erro ao voltar etapa')
     }
     setSalvando(false)
   }
@@ -253,54 +331,148 @@ function FluxoPreparacao({ equipamento, colaboradores, tecnicos, onAtualizar, is
 
           {/* Agendamento (etapa 5) */}
           {etapaAtual.temAgendamento && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Colaborador</label>
-                <select value={agendamento.colaboradorId}
-                  onChange={e => setAgendamento(a => ({ ...a, colaboradorId: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-                  <option value="">Selecionar...</option>
-                  {colaboradores.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data</label>
-                <input type="date" value={agendamento.data}
-                  onChange={e => setAgendamento(a => ({ ...a, data: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Horário</label>
-                <input type="time" value={agendamento.horario}
-                  onChange={e => setAgendamento(a => ({ ...a, horario: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Local</label>
-                <input type="text" value={agendamento.local} placeholder="Ex: Sala TI, Recepção..."
-                  onChange={e => setAgendamento(a => ({ ...a, local: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100" />
+            <div className="space-y-3">
+              {salvando && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm text-blue-700 font-medium">Salvando agendamento...</span>
+                </div>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Colaborador</label>
+                  <select value={agendamento.colaboradorId}
+                    onChange={(e) => {
+                      console.log('Colaborador mudou:', e.target.value)
+                      const novoColaboradorId = e.target.value
+                      setAgendamento(a => ({ ...a, colaboradorId: novoColaboradorId }))
+                      
+                      // Salvar se tem todos os campos
+                      if (novoColaboradorId && agendamento.data && agendamento.horario) {
+                        setSalvando(true)
+                        api.put(`/equipamentos/${equipamento.id}`, {
+                          agendamento: { 
+                            ...agendamento, 
+                            colaboradorId: parseInt(novoColaboradorId),
+                            data: agendamento.data,
+                            horario: agendamento.horario
+                          }
+                        }).then(() => {
+                          console.log('✅ Agendamento salvo com sucesso')
+                          setSalvando(false)
+                        }).catch(err => {
+                          console.error('❌ Erro ao salvar:', err)
+                          setSalvando(false)
+                        })
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">
+                    <option value="">Selecionar...</option>
+                    {colaboradores.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data</label>
+                  <input type="date" value={agendamento.data}
+                    onChange={(e) => {
+                      console.log('Data mudou:', e.target.value)
+                      const novaData = e.target.value
+                      setAgendamento(a => ({ ...a, data: novaData }))
+                      
+                      // Salvar se tem todos os campos
+                      if (agendamento.colaboradorId && novaData && agendamento.horario) {
+                        setSalvando(true)
+                        api.put(`/equipamentos/${equipamento.id}`, {
+                          agendamento: { 
+                            ...agendamento, 
+                            data: novaData,
+                            colaboradorId: parseInt(agendamento.colaboradorId),
+                            horario: agendamento.horario
+                          }
+                        }).then(() => {
+                          console.log('✅ Agendamento salvo com sucesso')
+                          setSalvando(false)
+                        }).catch(err => {
+                          console.error('❌ Erro ao salvar:', err)
+                          setSalvando(false)
+                        })
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Horário</label>
+                  <input type="time" value={agendamento.horario}
+                    onChange={(e) => {
+                      console.log('Horário mudou:', e.target.value)
+                      const novoHorario = e.target.value
+                      setAgendamento(a => ({ ...a, horario: novoHorario }))
+                      
+                      // Salvar se tem todos os campos
+                      if (agendamento.colaboradorId && agendamento.data && novoHorario) {
+                        setSalvando(true)
+                        api.put(`/equipamentos/${equipamento.id}`, {
+                          agendamento: { 
+                            ...agendamento, 
+                            horario: novoHorario,
+                            colaboradorId: parseInt(agendamento.colaboradorId),
+                            data: agendamento.data
+                          }
+                        }).then(() => {
+                          console.log('✅ Agendamento salvo com sucesso')
+                          setSalvando(false)
+                        }).catch(err => {
+                          console.error('❌ Erro ao salvar:', err)
+                          setSalvando(false)
+                        })
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Local</label>
+                  <input type="text" value={agendamento.local} placeholder="Ex: Sala TI, Recepção..."
+                    onChange={e => setAgendamento(a => ({ ...a, local: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100" />
+                </div>
               </div>
             </div>
           )}
 
-          <button onClick={avancar} disabled={salvando}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-60 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-blue-200 transition-all">
-            {salvando ? (
-              <span className="flex items-center gap-2">
-                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Salvando...
-              </span>
-            ) : etapaAtual.btnLabel}
-          </button>
+          <div className="flex flex-wrap gap-3">
+            {idxAtual > 0 && (
+              <button onClick={voltar} disabled={salvando}
+                className="px-6 py-2.5 rounded-xl text-sm font-semibold border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-all disabled:opacity-60">
+                Voltar Etapa
+              </button>
+            )}
+
+            <button onClick={avancar} disabled={salvando}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-60 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-blue-200 transition-all">
+              {salvando ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Salvando...
+                </span>
+              ) : etapaAtual.btnLabel}
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-8 text-center">
-          <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-emerald-200">
+        <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-8 text-center space-y-4">
+          <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-emerald-200">
             <Check size={32} className="text-white" />
           </div>
-          <p className="font-bold text-emerald-700 text-lg">Equipamento entregue!</p>
-          <p className="text-sm text-slate-500 mt-1">Processo concluído com sucesso</p>
+          <div>
+            <p className="font-bold text-emerald-700 text-lg">Equipamento entregue!</p>
+            <p className="text-sm text-slate-500 mt-1">Processo concluído com sucesso</p>
+          </div>
+          {idxAtual > 0 && (
+            <button onClick={voltar} disabled={salvando}
+              className="mx-auto px-6 py-2 rounded-xl text-xs font-semibold border border-emerald-300 hover:bg-emerald-50 text-emerald-700 transition-all disabled:opacity-60 flex items-center gap-1.5 justify-center">
+              Reverter entrega — Voltar etapa
+            </button>
+          )}
         </div>
       )}
 
@@ -355,7 +527,7 @@ export default function EquipamentoDetalhePage() {
         api.get(`/equipamentos/${id}`),
         api.get('/unidades'),
         api.get('/usuarios?comAcesso=true&role=TECNICO&limit=200'),
-        api.get('/usuarios?semAcesso=true&limit=500'),
+        api.get('/usuarios?semAcesso=true&limit=10000'),
       ])
       setEquipamento(eqRes.data)
       setUnidades(unRes.data)

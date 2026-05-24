@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { Plus, Search, LayoutList, Kanban, ClipboardList } from 'lucide-react'
+import { Plus, Search, LayoutList, Kanban, ClipboardList, Download, Upload } from 'lucide-react'
 import api from '../services/api'
 import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
@@ -7,6 +7,7 @@ import { SkeletonRow, EmptyState } from '../components/Skeleton'
 import SolicitacaoModal from '../components/modals/SolicitacaoModal'
 import SolicitacaoPipelineView from '../components/SolicitacaoPipelineView'
 import SolicitacaoDrawer from '../components/SolicitacaoDrawer'
+import ImportacaoModal from '../components/ImportacaoModal'
 
 // ── Badges ──────────────────────────────────────────────────────────────────
 
@@ -19,30 +20,27 @@ const TIPO_BADGE = {
 
 const ESTADO_BADGE = {
   'Aberto':              'bg-slate-100 text-slate-600 dark:bg-white/8 dark:text-slate-400',
-  'Aguardando NF':       'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-400',
+  'Aguard.Definição':       'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-400',
   'NF Solicitada':       'bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-400',
-  'Aguardando Coleta':   'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400',
-  'Coleta Solicitada':   'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400',
+  'Aguardando Coleta':   'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400',
   'Em Trânsito':         'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400',
-  'Aguardando Entrega':  'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-400',
+  'Aguard.Entrega':  'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-400',
   'Entregue':            'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
 }
 
 const TIPOS = ['', 'TROCA', 'NOVO', 'RETORNO', 'ENVIO']
-const ESTADOS = ['', 'Aberto', 'Aguardando NF', 'NF Solicitada', 'Aguardando Coleta', 'Coleta Solicitada', 'Em Trânsito', 'Aguardando Entrega', 'Entregue']
+const ESTADOS = ['', 'Aberto', 'Aguard.Definição', 'NF Solicitada', 'Aguardando Coleta', 'Em Trânsito', 'Aguard.Entrega', 'Entregue']
 
 // ── Mini Dashboard ───────────────────────────────────────────────────────────
 
 function DashboardCards({ dashboard, loading, filtroAtivo, onFiltro }) {
   const cards = [
     { label: 'Aberto',              value: dashboard?.porEstado?.Aberto ?? 0,              color: 'bg-slate-500',   filtro: 'Aberto' },
-    { label: 'Aguardando NF',       value: dashboard?.porEstado?.['Aguardando NF'] ?? 0,   color: 'bg-yellow-500',  filtro: 'Aguardando NF' },
+    { label: 'Aguard.Definição',       value: (dashboard?.porEstado?.['Aguard.Definição'] ?? 0) + (dashboard?.porEstado?.['Aguardando NF'] ?? 0),   color: 'bg-yellow-500',  filtro: 'Aguard.Definição' },
     { label: 'NF Solicitada',       value: dashboard?.porEstado?.['NF Solicitada'] ?? 0,   color: 'bg-orange-500',  filtro: 'NF Solicitada' },
-    { label: 'Aguardando Coleta',   value: dashboard?.porEstado?.['Aguardando Coleta'] ?? 0, color: 'bg-blue-500',  filtro: 'Aguardando Coleta' },
-    { label: 'Coleta Solicitada',   value: dashboard?.porEstado?.['Coleta Solicitada'] ?? 0, color: 'bg-indigo-500', filtro: 'Coleta Solicitada' },
+    { label: 'Aguardando Coleta',   value: (dashboard?.porEstado?.['Aguardando Coleta'] ?? 0) + (dashboard?.porEstado?.['Coleta Solicitada'] ?? 0), color: 'bg-indigo-500', filtro: 'Aguardando Coleta' },
     { label: 'Em Trânsito',         value: dashboard?.porEstado?.['Em Trânsito'] ?? 0,     color: 'bg-purple-500',  filtro: 'Em Trânsito' },
-    { label: 'Aguardando Entrega',  value: dashboard?.porEstado?.['Aguardando Entrega'] ?? 0, color: 'bg-cyan-500', filtro: 'Aguardando Entrega' },
-    { label: 'Entregue',            value: dashboard?.porEstado?.Entregue ?? 0,            color: 'bg-emerald-500', filtro: 'Entregue' },
+    { label: 'Aguard.Entrega',  value: (dashboard?.porEstado?.['Aguard.Entrega'] ?? 0) + (dashboard?.porEstado?.['Aguardando Entrega'] ?? 0), color: 'bg-cyan-500', filtro: 'Aguard.Entrega' },
   ]
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
@@ -67,8 +65,20 @@ function DashboardCards({ dashboard, loading, filtroAtivo, onFiltro }) {
 }
 
 function SummaryCards({ dashboard, loading, onFiltro }) {
+  // Calcular total excluindo encerrados e entregues - somando apenas estados ativos
+  const totalAtivos = (dashboard?.porEstado?.Aberto ?? 0) + 
+                     (dashboard?.porEstado?.['Aguard.Definição'] ?? 0) + 
+                     (dashboard?.porEstado?.['Aguardando NF'] ?? 0) + 
+                     (dashboard?.porEstado?.['NF Solicitada'] ?? 0) + 
+                     (dashboard?.porEstado?.['Aguardando Coleta'] ?? 0) + 
+                     (dashboard?.porEstado?.['Coleta Solicitada'] ?? 0) + 
+                     (dashboard?.porEstado?.['Em Trânsito'] ?? 0) + 
+                     (dashboard?.porEstado?.['Aguard.Entrega'] ?? 0) + 
+                     (dashboard?.porEstado?.['Aguardando Entrega'] ?? 0);
+  // Nota: Entregue e Encerrados são excluídos do total
+
   const cards = [
-    { label: 'Total', value: dashboard?.total ?? 0, color: 'bg-blue-500', icon: '📊', filtro: null },
+    { label: 'Total', value: totalAtivos, color: 'bg-blue-500', icon: '📊', filtro: 'TOTAL' },
     { label: 'Novo', value: dashboard?.porTipo?.NOVO ?? 0, color: 'bg-emerald-500', icon: '✨', filtro: 'NOVO' },
     { label: 'Troca', value: dashboard?.porTipo?.TROCA ?? 0, color: 'bg-amber-500', icon: '🔄', filtro: 'TROCA' },
     { label: 'Encerrados', value: dashboard?.totalEncerrados ?? 0, color: 'bg-slate-500', icon: '✓', filtro: 'ENCERRADO' },
@@ -118,8 +128,72 @@ export default function SolicitacoesPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editando, setEditando] = useState(null)
   const [drawerSolicitacaoId, setDrawerSolicitacaoId] = useState(null)
+  const [importacaoOpen, setImportacaoOpen] = useState(false)
 
   const debounceRef = useRef(null)
+
+  // Função para exportar relatório
+  const exportarRelatorio = async () => {
+    try {
+      // Buscar todas as solicitações sem paginação
+      const params = new URLSearchParams({ limit: 10000 }) // Limite alto para pegar todas
+      if (busca) params.set('busca', busca)
+      if (filtroCard) params.set('estado', filtroCard)
+      if (filtroTipo) params.set('tipo', filtroTipo)
+      if (filtroStatus) params.set('status', filtroStatus)
+      
+      const res = await api.get(`/solicitacoes?${params}`)
+      const dados = res.data.data || []
+      
+      // Preparar dados para CSV
+      const csvData = dados.map(s => ({
+        'Nº Chamado': s.numeroChamado,
+        'Descrição': s.descricao || '',
+        'Tipo': s.tipo,
+        'Estado': s.estado,
+        'Status': s.status === 'EM_ANDAMENTO' ? 'Em andamento' : s.status === 'ENCERRADO' ? 'Encerrado' : 'Aberto',
+        'Técnico': s.tecnico?.nome || '',
+        'Unidade': s.unidade?.nome || '',
+        'Data Criação': s.dataCriacao ? new Date(s.dataCriacao).toLocaleDateString('pt-BR') : new Date(s.createdAt).toLocaleDateString('pt-BR'),
+        'Sol. Definição': s.dataDefinicao ? new Date(s.dataDefinicao).toLocaleDateString('pt-BR') : '',
+        'Data Definição': s.dataDefinicaoConfirmada ? new Date(s.dataDefinicaoConfirmada).toLocaleDateString('pt-BR') : '',
+        'Sol. NF': s.dataSolicitacaoNF ? new Date(s.dataSolicitacaoNF).toLocaleDateString('pt-BR') : '',
+        'Emissão NF': s.dataEmissaoNF ? new Date(s.dataEmissaoNF).toLocaleDateString('pt-BR') : '',
+        'Sol. Coleta': s.dataSolicitacaoColeta ? new Date(s.dataSolicitacaoColeta).toLocaleDateString('pt-BR') : '',
+        'Data Coleta': s.dataColeta ? new Date(s.dataColeta).toLocaleDateString('pt-BR') : '',
+        'Previsão': s.previsaoChegada ? new Date(s.previsaoChegada).toLocaleDateString('pt-BR') : '',
+        'Chegada': s.dataChegada ? new Date(s.dataChegada).toLocaleDateString('pt-BR') : '',
+        'Entrega': s.dataEntrega ? new Date(s.dataEntrega).toLocaleDateString('pt-BR') : ''
+      }))
+      
+      // Converter para CSV com BOM para UTF-8
+      const headers = Object.keys(csvData[0] || {})
+      const csvContent = [
+        headers.join(';'), // Usar ponto e vírgula como separador
+        ...csvData.map(row => headers.map(header => `"${(row[header] || '').toString().replace(/"/g, '""')}"`).join(';'))
+      ].join('\r\n')
+      
+      // Adicionar BOM para UTF-8
+      const BOM = '\uFEFF'
+      const csvWithBOM = BOM + csvContent
+      
+      // Download do arquivo
+      const blob = new Blob([csvWithBOM], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `relatorio-solicitacoes-${new Date().toISOString().split('T')[0]}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      
+      toast.success('Relatório exportado com sucesso!')
+    } catch (error) {
+      toast.error('Erro ao exportar relatório')
+    }
+  }
 
   // Debounce busca
   const handleBusca = (val) => {
@@ -186,6 +260,19 @@ export default function SolicitacoesPage() {
             </button>
           </div>
           <button
+            onClick={exportarRelatorio}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            <Download size={15} /> Extrair Relatório
+          </button>
+          <button
+            onClick={() => setImportacaoOpen(true)}
+            disabled={isTecnico}
+            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            <Upload size={15} /> Importar
+          </button>
+          <button
             onClick={() => { setEditando(null); setModalOpen(true) }}
             disabled={isTecnico}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -206,9 +293,12 @@ export default function SolicitacoesPage() {
           // Aplicar novo filtro
           if (f === 'ENCERRADO') {
             setFiltroStatus('ENCERRADO')
-          } else if (f) {
-            setFiltroTipo(f)
+          } else if (f === 'NOVO') {
+            setFiltroTipo('NOVO')
+          } else if (f === 'TROCA') {
+            setFiltroTipo('TROCA')
           }
+          // Se for TOTAL, não aplica nenhum filtro de status (mostra todos os não encerrados)
           setPage(1) 
         }} />
         <div className="flex items-center justify-between">
@@ -221,7 +311,12 @@ export default function SolicitacoesPage() {
               
               // Aplicar novo filtro
               if (f) {
-                setFiltroCard(f)
+                // Se for Aguard.Entrega, buscar por ambos os nomes
+                if (f === 'Aguard.Entrega') {
+                  setFiltroCard('Aguard.Entrega')
+                } else {
+                  setFiltroCard(f)
+                }
               }
               setPage(1) 
             }} />
@@ -262,6 +357,7 @@ export default function SolicitacoesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/3">
+                  <th className="text-right py-2.5 px-3 text-[11px] text-slate-400 font-medium uppercase tracking-wide">Ações</th>
                   <th className="text-left py-2.5 px-3 text-[11px] text-slate-400 font-medium uppercase tracking-wide">Nº Chamado</th>
                   <th className="text-left py-2.5 px-3 text-[11px] text-slate-400 font-medium uppercase tracking-wide">Descrição</th>
                   <th className="text-left py-2.5 px-3 text-[11px] text-slate-400 font-medium uppercase tracking-wide">Tipo</th>
@@ -279,7 +375,6 @@ export default function SolicitacoesPage() {
                   <th className="text-left py-2.5 px-3 text-[11px] text-slate-400 font-medium uppercase tracking-wide">Previsão</th>
                   <th className="text-left py-2.5 px-3 text-[11px] text-slate-400 font-medium uppercase tracking-wide">Chegada</th>
                   <th className="text-left py-2.5 px-3 text-[11px] text-slate-400 font-medium uppercase tracking-wide">Entrega</th>
-                  <th className="text-right py-2.5 px-3 text-[11px] text-slate-400 font-medium uppercase tracking-wide">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -293,6 +388,18 @@ export default function SolicitacoesPage() {
                         className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/3 transition-colors cursor-pointer"
                         onClick={() => setDrawerSolicitacaoId(s.id)}
                       >
+                        <td className="py-2.5 px-2 text-right">
+                          <button
+                            onClick={(e) => { 
+                              e.stopPropagation()
+                              setEditando(s)
+                              setModalOpen(true)
+                            }}
+                            className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            Editar
+                          </button>
+                        </td>
                         <td className="py-2.5 px-2 font-mono text-[12px] font-semibold text-slate-800 dark:text-slate-100">{s.numeroChamado}</td>
                         <td className="py-2.5 px-2 text-[11px] text-slate-600 dark:text-slate-300 max-w-[150px] truncate" title={s.descricao || ''}>{s.descricao || '—'}</td>
                         <td className="py-2.5 px-2">
@@ -320,18 +427,6 @@ export default function SolicitacoesPage() {
                         <td className="py-2.5 px-2 text-[10px] text-slate-400">{s.previsaoChegada ? new Date(s.previsaoChegada).toLocaleDateString('pt-BR') : '—'}</td>
                         <td className="py-2.5 px-2 text-[10px] text-slate-400">{s.dataChegada ? new Date(s.dataChegada).toLocaleDateString('pt-BR') : '—'}</td>
                         <td className="py-2.5 px-2 text-[10px] text-slate-400">{s.dataEntrega ? new Date(s.dataEntrega).toLocaleDateString('pt-BR') : '—'}</td>
-                        <td className="py-2.5 px-2 text-right">
-                          <button
-                            onClick={(e) => { 
-                              e.stopPropagation()
-                              setEditando(s)
-                              setModalOpen(true)
-                            }}
-                            className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline"
-                          >
-                            Editar
-                          </button>
-                        </td>
                       </tr>
                     ))
                 }
@@ -371,6 +466,17 @@ export default function SolicitacoesPage() {
       <SolicitacaoDrawer
         solicitacaoId={drawerSolicitacaoId}
         onClose={() => setDrawerSolicitacaoId(null)}
+      />
+
+      {/* Modal de Importação */}
+      <ImportacaoModal
+        isOpen={importacaoOpen}
+        onClose={() => setImportacaoOpen(false)}
+        onSucesso={() => { 
+          setImportacaoOpen(false)
+          carregar()
+          carregarDashboard()
+        }}
       />
     </div>
   )

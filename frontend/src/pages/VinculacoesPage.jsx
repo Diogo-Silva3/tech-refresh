@@ -333,7 +333,7 @@ export default function VinculacoesPage() {
                     </td>
                     <td className="py-2.5 px-3">
                       <div className="flex items-center justify-end gap-1">
-                        {v.ativa && (
+                        {v.ativa && !v.isAgendamentoPreparacao && (
                           <>
                             <button onClick={() => setReagendando(v)} title="Reagendar"
                               className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded transition-colors">
@@ -364,6 +364,11 @@ export default function VinculacoesPage() {
                               <Unlink size={13} />
                             </button>
                           </>
+                        )}
+                        {v.isAgendamentoPreparacao && (
+                          <span className="text-[10px] px-2 py-1 rounded bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 font-medium">
+                            Agendado na Preparação
+                          </span>
                         )}
                       </div>
                     </td>

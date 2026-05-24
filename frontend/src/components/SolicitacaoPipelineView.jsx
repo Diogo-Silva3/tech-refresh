@@ -6,23 +6,21 @@ import { ClipboardList } from 'lucide-react'
 
 const COLUNAS = [
   'Aberto',
-  'Aguardando NF',
+  'Aguard.Definição',
   'NF Solicitada',
   'Aguardando Coleta',
-  'Coleta Solicitada',
   'Em Trânsito',
-  'Aguardando Entrega',
+  'Aguard.Entrega',
   'Entregue',
 ]
 
 const COLUNA_COLORS = {
   'Aberto':              'bg-slate-500',
-  'Aguardando NF':       'bg-yellow-500',
+  'Aguard.Definição':       'bg-yellow-500',
   'NF Solicitada':       'bg-orange-500',
-  'Aguardando Coleta':   'bg-blue-500',
-  'Coleta Solicitada':   'bg-indigo-500',
+  'Aguardando Coleta':   'bg-indigo-500',
   'Em Trânsito':         'bg-purple-500',
-  'Aguardando Entrega':  'bg-cyan-500',
+  'Aguard.Entrega':  'bg-cyan-500',
   'Entregue':            'bg-emerald-500',
 }
 

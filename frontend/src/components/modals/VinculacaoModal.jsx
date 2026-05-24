@@ -86,16 +86,24 @@ export default function VinculacaoModal({ onClose, onSave }) {
     e.preventDefault()
     if (!form.usuarioId) return toast.error('Selecione um colaborador')
     if (!form.equipamentoId) return toast.error('Selecione um equipamento')
-    if (!form.tecnicoId) return toast.error('Técnico responsável é obrigatório')
+    // Técnico é obrigatório apenas se não estiver agendando
+    if (!form.tecnicoId && !form.dataAgendamento) return toast.error('Técnico responsável é obrigatório')
     
     setLoading(true)
     try {
+      // Converter dataAgendamento para ISO se existir
+      let dataAgendamentoISO = null
+      if (form.dataAgendamento) {
+        // form.dataAgendamento vem como "2026-05-14T10:30" do datetime-local
+        dataAgendamentoISO = new Date(form.dataAgendamento).toISOString()
+      }
+      
       await api.post('/vinculacoes', {
         ...form,
         numeroChamado: form.numeroChamado || null,
         softwaresDe: form.softwaresDe || null,
         softwaresPara: form.softwaresPara || null,
-        dataAgendamento: form.dataAgendamento ? form.dataAgendamento + ':00-03:00' : null,
+        dataAgendamento: dataAgendamentoISO,
       })
       toast.success('Atribuição criada com sucesso')
       onSave()
