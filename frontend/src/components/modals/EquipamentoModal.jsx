@@ -19,7 +19,8 @@ const PROCESSO_OPTIONS = [
 ]
 
 export default function EquipamentoModal({ equipamento, unidades, onClose, onSave }) {
-  const { usuario, isTecnico } = useAuth()
+  const { usuario, isTecnico, projetoAtivo } = useAuth()
+  const isCelularesProject = projetoAtivo?.id === 4
   const [form, setForm] = useState({
     tipo: equipamento?.tipo || '',
     marca: equipamento?.marca || '',
@@ -32,6 +33,7 @@ export default function EquipamentoModal({ equipamento, unidades, onClose, onSav
     tecnicoId: equipamento?.tecnicoId || (isTecnico ? usuario?.id : ''),
     observacao: equipamento?.observacao || '',
     dataGarantia: equipamento?.dataGarantia ? new Date(equipamento.dataGarantia).toISOString().split('T')[0] : '',
+    linhaFonica: equipamento?.linhaFonica || '',
   })
   const [erros, setErros] = useState({})
   const [tecnicos, setTecnicos] = useState([])
@@ -75,7 +77,7 @@ export default function EquipamentoModal({ equipamento, unidades, onClose, onSav
     if (!validar()) return
     setLoading(true)
     try {
-      const data = { ...form, unidadeId: form.unidadeId || null, tecnicoId: form.tecnicoId || null, dataGarantia: form.dataGarantia || null }
+      const data = { ...form, unidadeId: form.unidadeId || null, tecnicoId: form.tecnicoId || null, dataGarantia: form.dataGarantia || null, linhaFonica: isCelularesProject ? (form.linhaFonica || null) : null }
       let saved
       if (equipamento) {
         const res = await api.put(`/equipamentos/${equipamento.id}`, data)
@@ -182,6 +184,12 @@ export default function EquipamentoModal({ equipamento, unidades, onClose, onSav
             <label className={labelCls}>{t('observacao')}</label>
             <textarea value={form.observacao} onChange={set('observacao')} rows={2} className={inputCls('observacao') + ' resize-none'} />
           </div>
+          {isCelularesProject && (
+            <div>
+              <label className={labelCls}>Linha Telefônica</label>
+              <input type="text" value={form.linhaFonica} onChange={set('linhaFonica')} placeholder="(11) 99999-9999" className={inputCls('linhaFonica')} />
+            </div>
+          )}
           <div>
             <label className={labelCls}>Data de Garantia</label>
             <input type="date" value={form.dataGarantia} onChange={set('dataGarantia')} className={inputCls('dataGarantia')} />
